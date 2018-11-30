@@ -1,6 +1,7 @@
 class StudentsController < ApplicationController
-
+  skip_before_action :require_user, only: [:new, :create]
   before_action :set_student, only: [:show, :edit, :update]
+  before_action :require_same_student, only: [:edit, :update]
 
   def index
     @students = Student.all
@@ -17,7 +18,7 @@ class StudentsController < ApplicationController
     @student = Student.new(student_params)
     if @student.save
       flash[:notice] = "You have successfully signed up"
-      redirect_to @student
+      redirect_to student_path(@student)
     else
       render 'new'
     end
@@ -36,6 +37,13 @@ class StudentsController < ApplicationController
   end
 
   private
+
+  def require_same_student
+    if current_user != @student
+      flash[:notice] = "You can only edit your own profile"
+      redirect_to student_path(current_user)
+    end
+  end
 
   def set_student
     @student = Student.find(params[:id])
